@@ -1,0 +1,2484 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Supervised</title>
+    <script src="check.js" defer></script>
+    <script src="uv/uv.bundle.js" defer></script>
+    <script src="uv/uv.config.js" defer></script>
+    <script src="scripts/search.mjs" type="module" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      :root {
+        --primary: #4ade80;
+        --primary-light: #22d3ee;
+        --primary-lighter: #5eead4;
+        --accent: #6ee7b7;
+        --star-color: #4ade80;
+        --constellation-color: #22d3ee;
+      }
+      
+      body {
+        background: #000000;
+        color: #ffffff;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        min-height: 100vh;
+        position: relative;
+      }
+      
+      body.iframe-active {
+        overflow: hidden;
+      }
+      
+      /* Space Background */
+      .space-background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        overflow: hidden;
+        background: radial-gradient(ellipse at bottom, rgba(74, 222, 128, 0.05) 0%, transparent 50%),
+                    radial-gradient(ellipse at top left, rgba(34, 211, 238, 0.03) 0%, transparent 50%),
+                    #000000;
+        animation: backgroundShift 20s ease-in-out infinite;
+      }
+      
+      @keyframes backgroundShift {
+        0%, 100% {
+          background: radial-gradient(ellipse at bottom, rgba(74, 222, 128, 0.05) 0%, transparent 50%),
+                      radial-gradient(ellipse at top left, rgba(34, 211, 238, 0.03) 0%, transparent 50%),
+                      #000000;
+        }
+        50% {
+          background: radial-gradient(ellipse at top, rgba(74, 222, 128, 0.05) 0%, transparent 50%),
+                      radial-gradient(ellipse at bottom right, rgba(34, 211, 238, 0.03) 0%, transparent 50%),
+                      #000000;
+        }
+      }
+      
+      .star {
+        position: absolute;
+        background: var(--star-color);
+        border-radius: 50%;
+        opacity: 0.4;
+        animation: twinkle 3s infinite ease-in-out, float 8s infinite ease-in-out;
+      }
+      
+      @keyframes twinkle {
+        0%, 100% {
+          opacity: 0.2;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.8;
+          transform: scale(1.2);
+        }
+      }
+      
+      @keyframes float {
+        0%, 100% {
+          transform: translate(0, 0) scale(1);
+        }
+        25% {
+          transform: translate(10px, -10px) scale(1.1);
+        }
+        50% {
+          transform: translate(-5px, 5px) scale(0.9);
+        }
+        75% {
+          transform: translate(-10px, -5px) scale(1.05);
+        }
+      }
+      
+      .constellation {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        background: var(--constellation-color);
+        border-radius: 50%;
+        box-shadow: 0 0 8px var(--constellation-color);
+        opacity: 0.6;
+        animation: pulse 4s infinite ease-in-out;
+      }
+      
+      @keyframes pulse {
+        0%, 100% {
+          opacity: 0.4;
+          box-shadow: 0 0 8px var(--constellation-color);
+        }
+        50% {
+          opacity: 0.9;
+          box-shadow: 0 0 20px var(--constellation-color), 0 0 30px var(--constellation-color);
+        }
+      }
+      
+      .constellation-line {
+        position: absolute;
+        background: var(--constellation-color);
+        opacity: 0.2;
+        height: 1px;
+        animation: glow 3s infinite ease-in-out;
+      }
+      
+      @keyframes glow {
+        0%, 100% {
+          opacity: 0.1;
+          box-shadow: 0 0 2px var(--constellation-color);
+        }
+        50% {
+          opacity: 0.4;
+          box-shadow: 0 0 8px var(--constellation-color);
+        }
+      }
+      
+      .shooting-star {
+        position: absolute;
+        width: 2px;
+        height: 100px;
+        background: linear-gradient(to bottom, var(--primary-light) 0%, transparent 100%);
+        transform: rotate(-45deg);
+        opacity: 0.7;
+        animation: shoot 4s infinite;
+      }
+      
+      @keyframes shoot {
+        0% {
+          top: -100px;
+          left: 10%;
+          opacity: 0;
+          transform: rotate(-45deg) scale(0.5);
+        }
+        10% {
+          opacity: 1;
+          transform: rotate(-45deg) scale(1);
+        }
+        100% {
+          top: 100vh;
+          left: 20%;
+          opacity: 0;
+          transform: rotate(-45deg) scale(0.5);
+        }
+      }
+      
+      /* Floating orbs */
+      .floating-orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(40px);
+        opacity: 0.3;
+        animation: floatOrb 15s infinite ease-in-out;
+      }
+      
+      @keyframes floatOrb {
+        0%, 100% {
+          transform: translate(0, 0) scale(1);
+          opacity: 0.2;
+        }
+        33% {
+          transform: translate(50px, -30px) scale(1.2);
+          opacity: 0.4;
+        }
+        66% {
+          transform: translate(-30px, 50px) scale(0.8);
+          opacity: 0.3;
+        }
+      }
+      
+      /* Particle effects */
+      .particle {
+        position: absolute;
+        width: 2px;
+        height: 2px;
+        background: var(--primary-light);
+        border-radius: 50%;
+        opacity: 0.6;
+        animation: particleFloat 10s infinite linear;
+      }
+      
+      @keyframes particleFloat {
+        0% {
+          transform: translateY(0) translateX(0) scale(0);
+          opacity: 0;
+        }
+        10% {
+          opacity: 1;
+          transform: translateY(0) translateX(0) scale(1);
+        }
+        90% {
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-100vh) translateX(50px) scale(0);
+          opacity: 0;
+        }
+      }
+      
+      /* Main Container */
+      .main-wrapper {
+        position: relative;
+        z-index: 10;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem 1rem;
+        max-width: 450px;
+        margin: 0 auto;
+      }
+      
+      /* Title */
+      .title {
+        text-align: center;
+        font-family: "Dancing Script", cursive;
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #4ade80;
+        margin-bottom: 1.5rem;
+        letter-spacing: 0.05em;
+        text-shadow: 0 0 20px rgba(74, 222, 128, 0.5);
+      }
+      
+      /* Search Container */
+      .search-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+      }
+      
+      .search-wrapper {
+        position: relative;
+        flex: 1;
+        max-width: 100%;
+      }
+      
+      #url-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+        background: rgba(40, 40, 40, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-right: 2px solid var(--primary-light);
+        border-radius: 0.5rem;
+        color: #ffffff;
+        outline: none;
+        transition: all 0.3s;
+        font-family: inherit;
+      }
+      
+      #url-input::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+      }
+      
+      #url-input:focus {
+        border-color: var(--primary-light);
+        border-right: 2px solid var(--primary-light);
+        background: rgba(50, 50, 50, 0.9);
+        box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.2);
+      }
+      
+      .search-underline {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent 0%, var(--primary-light) 50%, transparent 100%);
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      
+      #url-input:focus + .search-underline {
+        opacity: 1;
+      }
+      
+      .language-selector {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.6rem 0.75rem;
+        background: rgba(40, 40, 40, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+      
+      .language-selector:hover {
+        background: rgba(50, 50, 50, 0.9);
+        border-color: var(--primary-light);
+      }
+      
+      .flag-icon {
+        font-size: 1.25rem;
+      }
+      
+      /* Quick Apps Section */
+      .quick-apps-section {
+        margin-top: 1.5rem;
+      }
+      
+      .quick-apps-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+      }
+      
+      .quick-apps-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #ffffff;
+      }
+      
+      .edit-button {
+        padding: 0.4rem 0.75rem;
+        background: rgba(40, 40, 40, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.5rem;
+        color: #ffffff;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-family: inherit;
+      }
+      
+      .edit-button:hover {
+        background: rgba(50, 50, 50, 0.9);
+        border-color: var(--primary-light);
+      }
+      
+      .apps-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.5rem;
+        max-width: 100%;
+        margin: 0 auto;
+      }
+      
+      .app-icon {
+        background: rgba(40, 40, 40, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem 0.25rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        position: relative;
+        overflow: hidden;
+        min-height: 70px;
+        backdrop-filter: blur(10px);
+      }
+      
+      .app-icon:hover {
+        background: rgba(50, 50, 50, 0.9);
+        border-color: var(--primary-light);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(34, 211, 238, 0.3);
+      }
+      
+      .app-icon img {
+        width: 32px;
+        height: 32px;
+        object-fit: contain;
+        border-radius: 0.5rem;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+        margin-bottom: 0.35rem;
+      }
+      
+      .app-icon .icon-text {
+        font-size: 1.5rem;
+        color: #ffffff;
+        margin-bottom: 0.35rem;
+        line-height: 1;
+      }
+      
+      .app-icon .app-name {
+        font-size: 0.65rem;
+        color: #ffffff;
+        text-align: center;
+        word-wrap: break-word;
+        line-height: 1.2;
+        margin-top: 0;
+      }
+      
+      /* Footer */
+      .footer {
+        margin-top: 1.5rem;
+        padding-top: 0;
+        text-align: right;
+      }
+      
+      .footer-links {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.75rem;
+      }
+      
+      .footer-link {
+        color: rgba(255, 255, 255, 0.5);
+        text-decoration: none;
+        transition: color 0.2s;
+      }
+      
+      .footer-link:hover {
+        color: var(--primary);
+      }
+      
+      .footer-separator {
+        color: rgba(255, 255, 255, 0.3);
+      }
+      
+      /* Settings Modal (hidden by default) */
+      .settings-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(10px);
+      }
+      
+      .settings-modal.active {
+        display: flex;
+      }
+      
+      .settings-content {
+        background: rgba(20, 20, 20, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 1rem;
+        padding: 2rem;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+      
+      .settings-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+      
+      .settings-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #ffffff;
+      }
+      
+      .close-button {
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0.5rem;
+        transition: color 0.2s;
+      }
+      
+      .close-button:hover {
+        color: #ffffff;
+      }
+      
+      .setting-item {
+        margin-bottom: 1.5rem;
+      }
+      
+      .setting-label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: #ffffff;
+        font-size: 0.95rem;
+      }
+      
+      .setting-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        color: #ffffff;
+        outline: none;
+        transition: all 0.2s;
+        font-family: inherit;
+      }
+      
+      .setting-input:focus {
+        border-color: var(--primary-light);
+        background: rgba(50, 50, 50, 0.9);
+      }
+      
+      .setting-description {
+        font-size: 0.875rem;
+        color: rgba(255, 255, 255, 0.5);
+        margin-top: 0.5rem;
+      }
+      
+      .save-button {
+        margin-top: 1.5rem;
+        padding: 0.75rem 2rem;
+        font-size: 1rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 0.5rem;
+        background: var(--primary);
+        color: white;
+        cursor: pointer;
+        transition: all 0.2s;
+        width: 100%;
+      }
+      
+      .save-button:hover {
+        background: var(--primary-light);
+        transform: translateY(-1px);
+      }
+      
+      .settings-feature-section {
+        padding: 1.5rem;
+        background: rgba(30, 30, 30, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 0.5rem;
+      }
+      
+      .settings-nav-btn:hover {
+        background: rgba(50, 50, 50, 0.8) !important;
+        border-color: rgba(255, 255, 255, 0.2) !important;
+      }
+      
+      .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 26px;
+        flex-shrink: 0;
+      }
+      
+      .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      
+      .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(60, 60, 60, 0.8);
+        transition: 0.3s;
+        border-radius: 26px;
+      }
+      
+      .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 20px;
+        width: 20px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: 0.3s;
+        border-radius: 50%;
+      }
+      
+      .toggle-switch input:checked + .toggle-slider {
+        background-color: rgba(34, 211, 238, 0.3);
+      }
+      
+      .toggle-switch input:checked + .toggle-slider:before {
+        transform: translateX(24px);
+      }
+      
+      .cloak-type-btn.active {
+        border-color: rgba(34, 211, 238, 0.5) !important;
+        background: rgba(34, 211, 238, 0.1) !important;
+      }
+      
+      .cloak-type-btn:hover {
+        border-color: rgba(255, 255, 255, 0.2) !important;
+      }
+      
+      /* Games Section (hidden by default) */
+      .games-section {
+        display: none;
+        margin-top: 3rem;
+      }
+      
+      .games-section.active {
+        display: block;
+      }
+      
+      /* Iframe */
+      iframe {
+        width: 100%;
+        height: 100vh;
+        border: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        background: #000000;
+      }
+      
+      iframe.active {
+        display: block;
+        height: 100vh;
+        top: 0;
+      }
+      
+      /* Browser Controls - Bottom with Hover */
+      .browser-controls-container {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 1002;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+      
+      body.iframe-active .browser-controls-container {
+        opacity: 1;
+        pointer-events: all;
+      }
+      
+      .browser-controls-header {
+        position: relative;
+        z-index: 1003;
+        background: rgba(20, 20, 20, 0.98);
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 0.4rem 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        cursor: pointer;
+        user-select: none;
+        border-radius: 0.5rem 0.5rem 0 0;
+        transition: background 0.2s ease;
+        width: fit-content;
+        margin: 0 auto;
+        min-width: 140px;
+      }
+      
+      .browser-controls-header:hover {
+        background: rgba(25, 25, 25, 0.98);
+      }
+      
+      .browser-controls-caret {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.75rem;
+        transition: transform 0.3s ease;
+      }
+      
+      .browser-controls-title {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.8rem;
+        font-weight: 500;
+      }
+      
+      .browser-controls-bar {
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%) translateY(100%);
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.3s ease;
+        transform-origin: bottom center;
+        background: rgba(15, 15, 15, 0.98);
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(8px);
+        width: 100%;
+        border-radius: 0.5rem 0.5rem 0 0;
+        overflow: hidden;
+      }
+      
+      .browser-controls-header:hover ~ .browser-controls-bar,
+      .browser-controls-bar:hover {
+        opacity: 1;
+        pointer-events: all;
+        transform: translateX(-50%) translateY(0);
+      }
+      
+      .browser-progress-bar {
+        height: 2px;
+        width: 0%;
+        background: #22d3ee;
+        box-shadow: 0 0 8px rgba(34, 211, 238, 0.9), 0 0 12px rgba(34, 211, 238, 0.6);
+        transition: width 0.3s ease;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1004;
+      }
+      
+      .browser-controls-content {
+        padding: 0.625rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        height: 48px;
+        box-sizing: border-box;
+        position: relative;
+      }
+      
+      .browser-controls-container.collapsed .browser-controls-bar {
+        display: none;
+      }
+      
+      .browser-nav-icons {
+        display: flex;
+        gap: 0.375rem;
+        align-items: center;
+        flex-shrink: 0;
+      }
+      
+      .browser-utility-icons {
+        display: flex;
+        gap: 0.375rem;
+        align-items: center;
+        margin-left: auto;
+        flex-shrink: 0;
+      }
+      
+      .browser-icon {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.95);
+        cursor: pointer;
+        border-radius: 0.25rem;
+        transition: all 0.15s ease;
+        padding: 0;
+      }
+      
+      .browser-icon svg {
+        stroke: currentColor;
+        stroke-width: 2;
+        fill: none;
+        width: 18px;
+        height: 18px;
+      }
+      
+      .browser-icon:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 1);
+      }
+      
+      .browser-icon:active {
+        transform: scale(0.92);
+        background: rgba(255, 255, 255, 0.12);
+      }
+      
+      .browser-icon.browser-lang {
+        background: rgba(25, 25, 25, 0.9);
+        padding: 0.25rem 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        border-radius: 0.375rem;
+        height: auto;
+        min-width: auto;
+      }
+      
+      .browser-icon.browser-lang svg {
+        width: 10px;
+        height: 10px;
+        margin-left: 2px;
+      }
+      
+      .browser-url-bar {
+        flex: 1;
+        padding: 0.5rem 0.875rem;
+        background: rgba(25, 25, 25, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 0.375rem;
+        color: rgba(255, 255, 255, 0.95);
+        font-size: 0.875rem;
+        outline: none;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        transition: all 0.2s ease;
+        margin: 0 0.5rem;
+        min-width: 0;
+      }
+      
+      .browser-url-bar::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+      }
+      
+      .browser-url-bar:focus {
+        border-color: rgba(255, 255, 255, 0.15);
+        background: rgba(30, 30, 30, 0.95);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+      }
+      
+      
+      /* Loading */
+      .loading {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 2000;
+      }
+      
+      .loading.active {
+        display: block;
+      }
+      
+      .spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(34, 211, 238, 0.2);
+        border-top-color: var(--primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      
+      /* Responsive */
+      @media (max-width: 768px) {
+        .main-wrapper {
+          max-width: 100%;
+          padding: 1.5rem 1rem;
+        }
+        
+        .title {
+          font-size: 2rem;
+          margin-bottom: 1rem;
+        }
+        
+        .search-container {
+          margin-bottom: 1rem;
+        }
+        
+        .apps-grid {
+          grid-template-columns: repeat(4, 1fr);
+          gap: 0.5rem;
+        }
+        
+        .app-icon {
+          min-height: 65px;
+          padding: 0.45rem 0.2rem;
+        }
+        
+        .app-icon .icon-text {
+          font-size: 1.35rem;
+        }
+        
+        .app-icon img {
+          width: 28px;
+          height: 28px;
+        }
+        
+        .app-icon .app-name {
+          font-size: 0.6rem;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Space Background -->
+    <div class="space-background" id="space-background"></div>
+    
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+      <!-- Title -->
+      <h1 class="title">Supervised</h1>
+      
+      <!-- Search Container -->
+      <div class="search-container">
+        <div class="search-wrapper">
+          <form id="url-form" style="display: contents;">
+            <input
+              type="text"
+              id="url-input"
+              placeholder="search..."
+              autocomplete="off"
+              autocorrect="off"
+              spellcheck="false"
+            />
+            <div class="search-underline"></div>
+          </form>
+        </div>
+        <div class="language-selector">
+          <span class="flag-icon">🇺🇸</span>
+          <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
+        </div>
+      </div>
+      
+      <!-- Quick Apps Section -->
+      <div class="quick-apps-section">
+        <div class="quick-apps-header">
+          <h2 class="quick-apps-title">Quick apps</h2>
+          <button class="edit-button" id="edit-apps">Edit</button>
+        </div>
+        <div class="apps-grid" id="apps-grid">
+          <!-- Apps will be populated by JavaScript -->
+        </div>
+        <!-- Inline Edit Form (hidden by default) -->
+        <div id="inline-edit-form" style="display: none; margin-top: 1.5rem; padding: 1rem; background: rgba(40, 40, 40, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.5rem;">
+          <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <label style="color: #ffffff; min-width: 80px; font-size: 0.9rem;">Name</label>
+              <input type="text" id="inline-edit-app-name" class="setting-input" style="flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; padding: 0.5rem;">
+            </div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <label style="color: #ffffff; min-width: 80px; font-size: 0.9rem;">URL</label>
+              <input type="text" id="inline-edit-app-url" class="setting-input" style="flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; padding: 0.5rem;">
+            </div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <label style="color: #ffffff; min-width: 80px; font-size: 0.9rem;">Icon URL</label>
+              <input type="text" id="inline-edit-app-icon" class="setting-input" style="flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; padding: 0.5rem;">
+            </div>
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+            <button class="edit-button" id="inline-cancel-edit-app" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; padding: 0.5rem 1.5rem; border-radius: 0.25rem; cursor: pointer;">Cancel</button>
+            <button class="save-button" id="inline-save-edit-app" style="background: rgba(34, 211, 238, 0.3); border: 1px solid rgba(34, 211, 238, 0.5); color: #ffffff; padding: 0.5rem 1.5rem; border-radius: 0.25rem; cursor: pointer;">Save</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Games Section (hidden by default) -->
+      <div class="games-section" id="games-section">
+        <div class="quick-apps-header">
+          <h2 class="quick-apps-title">Games</h2>
+        </div>
+        <div class="apps-grid" id="games-grid">
+          <!-- Games will be populated by JavaScript -->
+        </div>
+      </div>
+      
+      <!-- Footer -->
+      <footer class="footer">
+        <div class="footer-links">
+          <a href="#" class="footer-link" id="footer-discord">Discord</a>
+          <span class="footer-separator">•</span>
+          <a href="#" class="footer-link" id="footer-settings">Settings</a>
+          <span class="footer-separator">•</span>
+          <a href="#" class="footer-link" id="footer-terms">Terms</a>
+          <span class="footer-separator">•</span>
+          <a href="#" class="footer-link" id="footer-privacy">Privacy</a>
+          <span class="footer-separator">•</span>
+          <a href="#" class="footer-link">Credits</a>
+        </div>
+      </footer>
+    </div>
+    
+    <!-- Edit Apps Modal -->
+    <div class="settings-modal" id="edit-apps-modal">
+      <div class="settings-content" style="background: #000000; border: 1px solid rgba(255, 255, 255, 0.1); max-width: 90vw; width: 100%; max-height: 90vh; overflow-y: auto;">
+        <div class="settings-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.1); display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem;">
+          <h2 class="settings-title" style="color: #ffffff; margin: 0;">Quick apps</h2>
+          <button class="close-button" id="close-edit-apps" style="color: rgba(255, 255, 255, 0.7); background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 0.25rem; padding: 0.5rem 1rem; cursor: pointer;">Done</button>
+        </div>
+        <div class="settings-section" style="background: #000000; padding: 1.5rem;">
+          <div id="edit-apps-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin-bottom: 1.5rem;">
+            <!-- Apps will be populated here -->
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Edit Single App Modal -->
+    <div class="settings-modal" id="edit-single-app-modal">
+      <div class="settings-content" style="background: rgba(40, 40, 40, 0.95); border: 1px solid rgba(255, 255, 255, 0.1); max-width: 500px; position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);">
+        <div class="settings-section" style="background: transparent; padding: 1.5rem;">
+          <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <label style="color: #ffffff; min-width: 80px; font-size: 0.9rem;">Name</label>
+              <input type="text" id="edit-app-name" class="setting-input" style="flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; padding: 0.5rem;">
+            </div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <label style="color: #ffffff; min-width: 80px; font-size: 0.9rem;">URL</label>
+              <input type="text" id="edit-app-url" class="setting-input" style="flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; padding: 0.5rem;">
+            </div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <label style="color: #ffffff; min-width: 80px; font-size: 0.9rem;">Icon URL</label>
+              <input type="text" id="edit-app-icon" class="setting-input" style="flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; padding: 0.5rem;">
+            </div>
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+            <button class="edit-button" id="cancel-edit-app" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; padding: 0.5rem 1.5rem; border-radius: 0.25rem; cursor: pointer;">Cancel</button>
+            <button class="save-button" id="save-edit-app" style="background: rgba(34, 211, 238, 0.3); border: 1px solid rgba(34, 211, 238, 0.5); color: #ffffff; padding: 0.5rem 1.5rem; border-radius: 0.25rem; cursor: pointer;">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Settings Modal -->
+    <div class="settings-modal" id="settings-modal">
+      <div class="settings-content" style="background: rgba(20, 20, 20, 0.98); max-width: 800px; width: 90vw; max-height: 90vh; overflow-y: auto;">
+        <!-- Back Button -->
+        <div style="padding: 1.5rem 1.5rem 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+          <button id="settings-back-btn" style="background: transparent; border: none; color: #22d3ee; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; padding: 0.5rem 0;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            <span>Back to Supervised</span>
+          </button>
+        </div>
+        
+        <!-- Title -->
+        <div style="padding: 0 1.5rem 1.5rem;">
+          <h2 style="color: #ffffff; font-size: 2rem; font-weight: 600; margin: 0;">settings</h2>
+        </div>
+        
+        <!-- History and Bookmarks Buttons -->
+        <div style="padding: 0 1.5rem 2rem; display: flex; gap: 1rem;">
+          <button id="settings-history-btn" class="settings-nav-btn" style="flex: 1; padding: 0.75rem 1rem; background: rgba(40, 40, 40, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.5rem; color: rgba(255, 255, 255, 0.9); cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span>Browsing History</span>
+          </button>
+          <button id="settings-bookmarks-btn" class="settings-nav-btn" style="flex: 1; padding: 0.75rem 1rem; background: rgba(40, 40, 40, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.5rem; color: rgba(255, 255, 255, 0.9); cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <span>Bookmarks</span>
+          </button>
+        </div>
+        
+        <!-- Settings Sections -->
+        <div style="padding: 0 1.5rem 2rem; display: flex; flex-direction: column; gap: 2rem;">
+          
+          <!-- Panic Button Section -->
+          <div class="settings-feature-section">
+            <h3 style="color: #ffffff; font-size: 1.25rem; font-weight: 600; margin: 0 0 0.5rem;">Panic Button</h3>
+            <p style="color: rgba(255, 255, 255, 0.7); font-size: 0.9rem; margin: 0 0 1.5rem; line-height: 1.5;">Quickly redirect to another site by pressing a key. Works globally across all pages.</p>
+            
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+              <div>
+                <label style="color: rgba(255, 255, 255, 0.9); font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Panic Key</label>
+                <button id="panic-key-btn" style="padding: 0.5rem 1rem; background: rgba(34, 211, 238, 0.2); border: 1px solid rgba(34, 211, 238, 0.5); border-radius: 0.375rem; color: #22d3ee; cursor: pointer; font-size: 0.9rem; min-width: 100px; text-align: left;">Escape</button>
+              </div>
+              <div>
+                <label style="color: rgba(255, 255, 255, 0.9); font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Redirect URL</label>
+                <input type="text" id="panic-redirect-url" class="setting-input" value="https://classroom.google.com" style="width: 100%; padding: 0.5rem 0.875rem; background: rgba(40, 40, 40, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.375rem; color: rgba(255, 255, 255, 0.9); font-size: 0.9rem; outline: none;">
+              </div>
+            </div>
+          </div>
+          
+          <!-- Auto Cloak Section -->
+          <div class="settings-feature-section">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+              <div style="flex: 1;">
+                <h3 style="color: #ffffff; font-size: 1.25rem; font-weight: 600; margin: 0 0 0.5rem;">Auto Cloak</h3>
+                <p style="color: rgba(255, 255, 255, 0.7); font-size: 0.9rem; margin: 0; line-height: 1.5;">Disguise the tab when you switch away from it. Changes the title and favicon automatically.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="auto-cloak-toggle">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          
+          <!-- URL Cloaker Section -->
+          <div class="settings-feature-section">
+            <h3 style="color: #ffffff; font-size: 1.25rem; font-weight: 600; margin: 0 0 0.5rem;">URL Cloaker</h3>
+            <p style="color: rgba(255, 255, 255, 0.7); font-size: 0.9rem; margin: 0 0 1.5rem; line-height: 1.5;">Cloak the site in an iframe to hide the actual site address. Choose your preferred method below.</p>
+            
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+              <div>
+                <label style="color: rgba(255, 255, 255, 0.9); font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Select Cloak Type</label>
+                <div style="display: flex; gap: 1rem;">
+                  <button id="cloak-blob-btn" class="cloak-type-btn active" style="flex: 1; padding: 1rem; background: rgba(40, 40, 40, 0.8); border: 2px solid rgba(34, 211, 238, 0.5); border-radius: 0.5rem; color: rgba(255, 255, 255, 0.9); cursor: pointer; text-align: center;">
+                    <div style="font-weight: 600; margin-bottom: 0.25rem;">Blob URL</div>
+                    <div style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.6);">blob:https://...</div>
+                  </button>
+                  <button id="cloak-about-btn" class="cloak-type-btn" style="flex: 1; padding: 1rem; background: rgba(40, 40, 40, 0.8); border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 0.5rem; color: rgba(255, 255, 255, 0.9); cursor: pointer; text-align: center;">
+                    <div style="font-weight: 600; margin-bottom: 0.25rem;">About Blank</div>
+                    <div style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.6);">about:blank</div>
+                  </button>
+                </div>
+              </div>
+              <button id="apply-cloak-btn" style="padding: 0.75rem 1.5rem; background: rgba(34, 211, 238, 0.2); border: 1px solid rgba(34, 211, 238, 0.5); border-radius: 0.375rem; color: #22d3ee; cursor: pointer; font-size: 0.9rem; font-weight: 600; width: fit-content;">Apply Blob Cloak</button>
+            </div>
+          </div>
+          
+          <!-- Anti-Close Section -->
+          <div class="settings-feature-section">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+              <div style="flex: 1;">
+                <h3 style="color: #ffffff; font-size: 1.25rem; font-weight: 600; margin: 0 0 0.5rem;">Anti-Close</h3>
+                <p style="color: rgba(255, 255, 255, 0.7); font-size: 0.9rem; margin: 0; line-height: 1.5;">Show a confirmation popup when attempting to close or reload the tab to prevent accidental closures.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="anti-close-toggle" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+    
+    <!-- Terms of Service Modal -->
+    <div class="settings-modal" id="terms-modal">
+      <div class="settings-content" style="background: #000000; border: 1px solid rgba(255, 255, 255, 0.1); max-width: 700px; max-height: 80vh; overflow-y: auto;">
+        <div class="settings-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+          <h2 class="settings-title" style="color: #ffffff;">Terms of Service</h2>
+          <button class="close-button" id="close-terms" style="color: rgba(255, 255, 255, 0.7);">&times;</button>
+        </div>
+        <div class="settings-section" style="background: #000000; padding: 1.5rem;">
+          <div style="color: rgba(255, 255, 255, 0.9); line-height: 1.6; font-size: 0.9rem;">
+            <p style="margin-bottom: 1rem;">You must use this website only for lawful purposes. Any misuse, including attempts to exploit, attack, or abuse the proxy service, is strictly prohibited.</p>
+            
+            <p style="margin-bottom: 1rem;">We are not responsible for the content you access through this proxy. All materials, websites, and services accessed are the responsibility of their respective owners.</p>
+            
+            <p style="margin-bottom: 1rem;">The gaming section is provided for entertainment purposes only. We do not claim ownership over any third-party games hosted or linked on this platform.</p>
+            
+            <p style="margin-bottom: 1rem;">Service availability is not guaranteed. We may update, restrict, or terminate the service at any time without prior notice.</p>
+            
+            <p style="margin-bottom: 1rem;">By using this website, you agree to comply with all applicable local, state, and international laws.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Privacy Policy Modal -->
+    <div class="settings-modal" id="privacy-modal">
+      <div class="settings-content" style="background: #000000; border: 1px solid rgba(255, 255, 255, 0.1); max-width: 700px; max-height: 80vh; overflow-y: auto;">
+        <div class="settings-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+          <h2 class="settings-title" style="color: #ffffff;">Privacy Policy</h2>
+          <button class="close-button" id="close-privacy" style="color: rgba(255, 255, 255, 0.7);">&times;</button>
+        </div>
+        <div class="settings-section" style="background: #000000; padding: 1.5rem;">
+          <div style="color: rgba(255, 255, 255, 0.9); line-height: 1.6; font-size: 0.9rem;">
+            <p style="margin-bottom: 1rem;">This site is designed to allow anonymous browsing. We do not log or share your browsing history, IP address, or personal identifying information.</p>
+            
+            <p style="margin-bottom: 1rem;">Basic performance data (such as server health and usage statistics) may be collected for technical maintenance and improvement purposes.</p>
+            
+            <p style="margin-bottom: 1rem;">Cookies may be used to store temporary session data or game progress, but these are not linked to your identity.</p>
+            
+            <p style="margin-bottom: 1rem;">We do not sell, rent, or share your information with third parties.</p>
+            
+            <p style="margin-bottom: 1rem;">If you submit feedback, we may store your contact information solely for responding to your inquiry.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <iframe id="proxy-frame" sandbox="allow-scripts allow-forms allow-same-origin allow-storage-access-by-user-activation"></iframe>
+    
+    <!-- Browser Controls -->
+    <div class="browser-controls-container" id="browser-controls">
+      <div class="browser-controls-header" id="browser-controls-header">
+        <span class="browser-controls-caret">^</span>
+        <span class="browser-controls-title">Browser Controls</span>
+      </div>
+      <div class="browser-controls-bar">
+        <div class="browser-progress-bar" id="browser-progress-bar"></div>
+        <div class="browser-controls-content">
+          <div class="browser-nav-icons">
+            <button class="browser-icon" id="browser-home" title="Home">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+              </svg>
+            </button>
+            <button class="browser-icon" id="browser-back" title="Back">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+            <button class="browser-icon" id="browser-forward" title="Forward">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+            <button class="browser-icon" id="browser-refresh" title="Refresh">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+            </button>
+          </div>
+          <input type="text" class="browser-url-bar" id="browser-url-bar" placeholder="Enter URL or search...">
+          <div class="browser-utility-icons">
+            <button class="browser-icon" id="browser-settings" title="Settings">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Loading Spinner -->
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+    </div>
+    
+    <script>
+      // Create space background
+      const spaceBg = document.getElementById('space-background');
+      
+      // Create stars
+      for (let i = 0; i < 200; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        const size = Math.random() * 2 + 0.5;
+        star.style.width = size + 'px';
+        star.style.height = size + 'px';
+        star.style.left = Math.random() * 100 + '%';
+        star.style.top = Math.random() * 100 + '%';
+        star.style.animationDelay = Math.random() * 3 + 's';
+        spaceBg.appendChild(star);
+      }
+      
+      // Create constellations
+      const constellationPositions = [
+        { x: 20, y: 15, connections: [[30, 25], [15, 30]] },
+        { x: 10, y: 50, connections: [[25, 55], [20, 60]] },
+        { x: 80, y: 40, connections: [[85, 50], [75, 45]] }
+      ];
+      
+      constellationPositions.forEach((pos, idx) => {
+        const dot = document.createElement('div');
+        dot.className = 'constellation';
+        dot.style.left = pos.x + '%';
+        dot.style.top = pos.y + '%';
+        spaceBg.appendChild(dot);
+        
+        pos.connections.forEach(conn => {
+          const line = document.createElement('div');
+          line.className = 'constellation-line';
+          const dx = conn[0] - pos.x;
+          const dy = conn[1] - pos.y;
+          const length = Math.sqrt(dx * dx + dy * dy);
+          const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+          line.style.width = length + '%';
+          line.style.left = pos.x + '%';
+          line.style.top = pos.y + '%';
+          line.style.transform = `rotate(${angle}deg)`;
+          line.style.transformOrigin = '0 0';
+          spaceBg.appendChild(line);
+          
+          const dot2 = document.createElement('div');
+          dot2.className = 'constellation';
+          dot2.style.left = conn[0] + '%';
+          dot2.style.top = conn[1] + '%';
+          spaceBg.appendChild(dot2);
+        });
+      });
+      
+      // Create multiple shooting stars
+      for (let i = 0; i < 3; i++) {
+        const shootingStar = document.createElement('div');
+        shootingStar.className = 'shooting-star';
+        shootingStar.style.animationDelay = (i * 1.5) + 's';
+        shootingStar.style.left = (10 + i * 30) + '%';
+        spaceBg.appendChild(shootingStar);
+      }
+      
+      // Create floating orbs
+      for (let i = 0; i < 4; i++) {
+        const orb = document.createElement('div');
+        orb.className = 'floating-orb';
+        const size = Math.random() * 200 + 100;
+        orb.style.width = size + 'px';
+        orb.style.height = size + 'px';
+        orb.style.background = i % 2 === 0 
+          ? `radial-gradient(circle, var(--primary) 0%, transparent 70%)`
+          : `radial-gradient(circle, var(--primary-light) 0%, transparent 70%)`;
+        orb.style.left = Math.random() * 100 + '%';
+        orb.style.top = Math.random() * 100 + '%';
+        orb.style.animationDelay = (i * 2) + 's';
+        orb.style.animationDuration = (12 + Math.random() * 8) + 's';
+        spaceBg.appendChild(orb);
+      }
+      
+      // Create floating particles
+      for (let i = 0; i < 30; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.bottom = '-10px';
+        particle.style.animationDelay = Math.random() * 10 + 's';
+        particle.style.animationDuration = (8 + Math.random() * 7) + 's';
+        spaceBg.appendChild(particle);
+      }
+      
+      // Default quick apps data
+      const defaultQuickApps = [
+        { name: 'YouTube', icon: 'https://www.youtube.com/favicon.ico', fallback: '▶️', url: 'https://www.youtube.com' },
+        { name: 'GitHub', icon: 'https://github.com/favicon.ico', fallback: '🐙', url: 'https://github.com' },
+        { name: 'Discord', icon: 'https://discord.com/assets/847541504914fd33874e209189dba68a.png', fallback: '💬', url: 'https://discord.com' },
+        { name: 'TikTok', icon: 'https://www.tiktok.com/favicon.ico', fallback: '🎵', url: 'https://www.tiktok.com' },
+        { name: 'Google', icon: 'https://www.google.com/favicon.ico', fallback: '🔍', url: 'https://www.google.com' },
+        { name: 'Twitter', icon: 'https://twitter.com/favicon.ico', fallback: '🐦', url: 'https://twitter.com' },
+        { name: 'Roblox', icon: 'https://www.roblox.com/favicon.ico', fallback: '🎮', url: 'https://www.roblox.com' },
+        { name: 'GeForce Now', icon: 'https://www.nvidia.com/favicon.ico', fallback: '🎯', url: 'https://www.nvidia.com/en-us/geforce-now/' },
+        { name: 'Movies', icon: 'https://www.netflix.com/favicon.ico', fallback: '🎬', url: 'https://www.netflix.com' },
+        { name: 'Games', icon: 'data:image/svg+xml,%3Csvg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M20 16C16.6863 16 14 18.6863 14 22V42C14 45.3137 16.6863 48 20 48H44C47.3137 48 50 45.3137 50 42V22C50 18.6863 47.3137 16 44 16H20Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/%3E%3Cpath d="M18 28H22V32H18V28Z" fill="white"/%3E%3Cpath d="M42 28H46V32H42V28Z" fill="white"/%3E%3Cpath d="M24 24H26V26H24V24Z" fill="white"/%3E%3Cpath d="M38 24H40V26H38V24Z" fill="white"/%3E%3Cpath d="M30 36H34V40H30V36Z" fill="white"/%3E%3Cpath d="M38 36H42V40H38V36Z" fill="white"/%3E%3Ctext x="20" y="20" font-size="8" fill="white" font-weight="bold"%3E+%3C/text%3E%3Ctext x="44" y="20" font-size="8" fill="white" font-weight="bold"%3E-%3C/text%3E%3C/svg%3E', fallback: '🎮', url: '#', action: 'show-games' }
+      ];
+      
+      // Load quick apps from localStorage or use defaults
+      function loadQuickApps() {
+        let apps = [];
+        try {
+          const saved = localStorage.getItem('quickApps');
+          if (saved) {
+            apps = JSON.parse(saved);
+            // Validate that apps is an array
+            if (!Array.isArray(apps)) {
+              apps = [];
+            }
+          }
+        } catch (e) {
+          console.error('Error loading quick apps from localStorage:', e);
+          apps = [];
+        }
+        
+        // If no apps or empty array, use defaults
+        if (!apps || apps.length === 0) {
+          apps = JSON.parse(JSON.stringify(defaultQuickApps));
+        } else {
+          // Ensure all default apps are present (merge with saved apps)
+          defaultQuickApps.forEach(defaultApp => {
+            const exists = apps.some(app => app.name === defaultApp.name);
+            if (!exists) {
+              apps.push(JSON.parse(JSON.stringify(defaultApp)));
+            }
+          });
+        }
+        
+        // Ensure Games app is always present and update its icon
+        const gamesAppIndex = apps.findIndex(app => app.action === 'show-games' || app.name === 'Games');
+        const gamesIcon = 'data:image/svg+xml,%3Csvg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M20 16C16.6863 16 14 18.6863 14 22V42C14 45.3137 16.6863 48 20 48H44C47.3137 48 50 45.3137 50 42V22C50 18.6863 47.3137 16 44 16H20Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/%3E%3Cpath d="M18 28H22V32H18V28Z" fill="white"/%3E%3Cpath d="M42 28H46V32H42V28Z" fill="white"/%3E%3Cpath d="M24 24H26V26H24V24Z" fill="white"/%3E%3Cpath d="M38 24H40V26H38V24Z" fill="white"/%3E%3Cpath d="M30 36H34V40H30V36Z" fill="white"/%3E%3Cpath d="M38 36H42V40H38V36Z" fill="white"/%3E%3Ctext x="20" y="20" font-size="8" fill="white" font-weight="bold"%3E+%3C/text%3E%3Ctext x="44" y="20" font-size="8" fill="white" font-weight="bold"%3E-%3C/text%3E%3C/svg%3E';
+        if (gamesAppIndex === -1) {
+          apps.push({ name: 'Games', icon: gamesIcon, fallback: '🎮', url: '#', action: 'show-games' });
+        } else {
+          // Update existing Games app icon
+          apps[gamesAppIndex].icon = gamesIcon;
+        }
+        
+        // Save updated apps back to localStorage
+        localStorage.setItem('quickApps', JSON.stringify(apps));
+        
+        return apps;
+      }
+      
+      // Save quick apps to localStorage
+      function saveQuickApps(apps) {
+        localStorage.setItem('quickApps', JSON.stringify(apps));
+      }
+      
+      // Get current quick apps
+      let quickApps = [];
+      let isEditMode = false;
+      let editingAppIndex = null;
+      
+      // Function to render apps grid
+      function renderAppsGrid() {
+        const appsGrid = document.getElementById('apps-grid');
+        if (!appsGrid) {
+          console.error('apps-grid element not found!');
+          return;
+        }
+        
+        // Reload apps to ensure we have the latest
+        quickApps = loadQuickApps();
+        
+        // Force restore all default apps if the list is empty or too small
+        if (!quickApps || quickApps.length === 0 || quickApps.length < defaultQuickApps.length) {
+          console.log('Restoring default apps...');
+          quickApps = JSON.parse(JSON.stringify(defaultQuickApps));
+          saveQuickApps(quickApps);
+        }
+        
+        // Always ensure we have at least the default apps
+        const defaultAppNames = defaultQuickApps.map(app => app.name);
+        const existingAppNames = quickApps.map(app => app.name);
+        defaultQuickApps.forEach(defaultApp => {
+          if (!existingAppNames.includes(defaultApp.name)) {
+            quickApps.push(JSON.parse(JSON.stringify(defaultApp)));
+          }
+        });
+        if (quickApps.length !== defaultQuickApps.length) {
+          saveQuickApps(quickApps);
+        }
+        
+        appsGrid.innerHTML = '';
+        
+        if (!quickApps || quickApps.length === 0) {
+          console.error('No apps to render!');
+          return;
+        }
+        
+        quickApps.forEach((app, index) => {
+          const isGamesApp = app.action === 'show-games' || app.name === 'Games';
+          const appIcon = document.createElement('div');
+          appIcon.className = 'app-icon';
+          appIcon.dataset.index = index;
+          
+          // Make draggable in edit mode
+          if (isEditMode) {
+            appIcon.draggable = true;
+            appIcon.style.cursor = 'move';
+          } else {
+            appIcon.draggable = false;
+            appIcon.style.cursor = 'pointer';
+          }
+          
+          // Use image icon if available (http or data URI), otherwise use emoji fallback
+          if (app.icon && (app.icon.startsWith('http') || app.icon.startsWith('data:'))) {
+            const img = document.createElement('img');
+            img.src = app.icon;
+            img.alt = app.name;
+            img.draggable = false;
+            img.style.width = '32px';
+            img.style.height = '32px';
+            img.style.objectFit = 'contain';
+            const fallback = document.createElement('span');
+            fallback.className = 'icon-text';
+            fallback.textContent = app.fallback || '🎮';
+            fallback.style.display = 'none';
+            img.onerror = () => {
+              img.style.display = 'none';
+              fallback.style.display = 'block';
+            };
+            appIcon.appendChild(img);
+            appIcon.appendChild(fallback);
+          } else {
+            const iconSpan = document.createElement('span');
+            iconSpan.className = 'icon-text';
+            iconSpan.textContent = app.icon || app.fallback || '🎮';
+            iconSpan.draggable = false;
+            appIcon.appendChild(iconSpan);
+          }
+          
+          const nameSpan = document.createElement('span');
+          nameSpan.className = 'app-name';
+          nameSpan.textContent = app.name;
+          nameSpan.draggable = false;
+          appIcon.appendChild(nameSpan);
+          appIcon.title = app.name;
+          
+          // Edit and Remove buttons (only in edit mode)
+          if (isEditMode && !isGamesApp) {
+            const editBtn = document.createElement('button');
+            editBtn.innerHTML = '✏️';
+            editBtn.draggable = false;
+            editBtn.style.cssText = 'position: absolute; top: 4px; right: 4px; background: rgba(0, 0, 0, 0.5); border: none; border-radius: 0.25rem; padding: 0.25rem; cursor: pointer; font-size: 0.7rem; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; z-index: 10;';
+            editBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              window.openInlineEditAppModal(index);
+            });
+            appIcon.appendChild(editBtn);
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.innerHTML = '×';
+            removeBtn.draggable = false;
+            removeBtn.style.cssText = 'position: absolute; top: 4px; right: 26px; background: rgba(0, 0, 0, 0.5); border: none; border-radius: 0.25rem; padding: 0.25rem; cursor: pointer; font-size: 0.9rem; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; color: #ffffff; z-index: 10;';
+             removeBtn.addEventListener('click', (e) => {
+               e.stopPropagation();
+               const appToRemove = quickApps[index];
+               if (appToRemove && (appToRemove.action === 'show-games' || appToRemove.name === 'Games')) {
+                 alert('The Games app cannot be removed.');
+                 return;
+               }
+               if (confirm(`Remove ${app.name}?`)) {
+                 quickApps.splice(index, 1);
+                 
+                 // Ensure all default apps are still present (except Games which is handled separately)
+                 const defaultAppNames = defaultQuickApps.map(a => a.name);
+                 const existingAppNames = quickApps.map(a => a.name);
+                 defaultQuickApps.forEach(defaultApp => {
+                   if (defaultApp.name !== 'Games' && !existingAppNames.includes(defaultApp.name)) {
+                     quickApps.push(JSON.parse(JSON.stringify(defaultApp)));
+                   }
+                 });
+                 
+                 // Ensure Games app is always present
+                 const hasGamesApp = quickApps.some(a => a.action === 'show-games' || a.name === 'Games');
+                 if (!hasGamesApp) {
+                   quickApps.push({ name: 'Games', icon: 'data:image/svg+xml,%3Csvg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M20 16C16.6863 16 14 18.6863 14 22V42C14 45.3137 16.6863 48 20 48H44C47.3137 48 50 45.3137 50 42V22C50 18.6863 47.3137 16 44 16H20Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/%3E%3Cpath d="M18 28H22V32H18V28Z" fill="white"/%3E%3Cpath d="M42 28H46V32H42V28Z" fill="white"/%3E%3Cpath d="M24 24H26V26H24V24Z" fill="white"/%3E%3Cpath d="M38 24H40V26H38V24Z" fill="white"/%3E%3Cpath d="M30 36H34V40H30V36Z" fill="white"/%3E%3Cpath d="M38 36H42V40H38V36Z" fill="white"/%3E%3Ctext x="20" y="20" font-size="8" fill="white" font-weight="bold"%3E+%3C/text%3E%3Ctext x="44" y="20" font-size="8" fill="white" font-weight="bold"%3E-%3C/text%3E%3C/svg%3E', fallback: '🎮', url: '#', action: 'show-games' });
+                 }
+                 
+                 saveQuickApps(quickApps);
+                 renderAppsGrid();
+               }
+             });
+            appIcon.appendChild(removeBtn);
+          }
+          
+          // Click handler (only when not in edit mode)
+          if (!isEditMode) {
+            appIcon.addEventListener('click', () => {
+              if (app.action === 'show-games') {
+                // Switch to games tab
+                const gamesButton = document.querySelector('.nav-button[data-tab="games"]');
+                if (gamesButton) {
+                  gamesButton.click();
+                }
+              } else {
+                // Load app through proxy by submitting form
+                const urlInput = document.getElementById('url-input');
+                const urlForm = document.getElementById('url-form');
+                if (urlInput && urlForm) {
+                  urlInput.value = app.url;
+                  urlForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+                }
+              }
+            });
+          }
+          
+          // Drag and drop handlers (only in edit mode)
+          if (isEditMode) {
+            appIcon.addEventListener('dragstart', (e) => {
+              e.dataTransfer.effectAllowed = 'move';
+              e.dataTransfer.setData('text/html', index);
+              appIcon.style.opacity = '0.5';
+              appIcon.style.cursor = 'grabbing';
+            });
+            
+            appIcon.addEventListener('dragend', (e) => {
+              appIcon.style.opacity = '1';
+              appIcon.style.cursor = 'move';
+              document.querySelectorAll('#apps-grid .app-icon').forEach(card => {
+                card.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+                card.style.transform = 'scale(1)';
+              });
+            });
+            
+            appIcon.addEventListener('dragover', (e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+              
+              const draggedIndex = parseInt(e.dataTransfer.getData('text/html'));
+              const currentIndex = parseInt(appIcon.dataset.index);
+              
+              if (draggedIndex !== currentIndex && !isNaN(draggedIndex)) {
+                appIcon.style.border = '2px solid rgba(34, 211, 238, 0.5)';
+                appIcon.style.transform = 'scale(1.05)';
+              }
+            });
+            
+            appIcon.addEventListener('dragleave', (e) => {
+              appIcon.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+              appIcon.style.transform = 'scale(1)';
+            });
+            
+            appIcon.addEventListener('drop', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              
+              const draggedIndex = parseInt(e.dataTransfer.getData('text/html'));
+              const dropIndex = parseInt(appIcon.dataset.index);
+              
+              if (draggedIndex !== dropIndex && !isNaN(draggedIndex)) {
+                const draggedApp = quickApps[draggedIndex];
+                quickApps.splice(draggedIndex, 1);
+                quickApps.splice(dropIndex, 0, draggedApp);
+                
+                saveQuickApps(quickApps);
+                renderAppsGrid();
+              }
+              
+              appIcon.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+              appIcon.style.transform = 'scale(1)';
+            });
+          }
+          
+          appsGrid.appendChild(appIcon);
+        });
+        
+        // Add "+ Add" card in edit mode
+        if (isEditMode) {
+          const addCard = document.createElement('div');
+          addCard.className = 'app-icon';
+          addCard.style.cssText = 'background: rgba(40, 40, 40, 0.8); border: 2px dashed rgba(255, 255, 255, 0.3); border-radius: 0.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.5rem 0.25rem; cursor: pointer; transition: all 0.3s; position: relative; overflow: visible; min-height: 70px;';
+          
+          const addText = document.createElement('span');
+          addText.textContent = '+ Add';
+          addText.style.cssText = 'font-size: 0.9rem; color: rgba(255, 255, 255, 0.7); text-align: center;';
+          addCard.appendChild(addText);
+          
+          addCard.addEventListener('click', () => {
+            const newApp = { name: 'New App', url: '', icon: '', fallback: '🎮' };
+            quickApps.push(newApp);
+            window.openInlineEditAppModal(quickApps.length - 1);
+            renderAppsGrid();
+          });
+          
+          addCard.addEventListener('mouseenter', () => {
+            addCard.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+            addCard.style.background = 'rgba(50, 50, 50, 0.8)';
+          });
+          
+          addCard.addEventListener('mouseleave', () => {
+            addCard.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+            addCard.style.background = 'rgba(40, 40, 40, 0.8)';
+          });
+          
+          appsGrid.appendChild(addCard);
+        }
+      }
+      
+      // Initial render - ensure DOM is ready
+      function initializeApps() {
+        // Force clear and reload
+        quickApps = loadQuickApps();
+        
+        // Double check - if still empty, force reset
+        if (!quickApps || quickApps.length === 0) {
+          console.log('Force resetting apps to defaults');
+          quickApps = JSON.parse(JSON.stringify(defaultQuickApps));
+          saveQuickApps(quickApps);
+        }
+        
+        // Render the apps
+        renderAppsGrid();
+      }
+      
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeApps);
+      } else {
+        // DOM already ready, but wait a tiny bit to ensure everything is loaded
+        setTimeout(initializeApps, 100);
+      }
+      
+      // Also try rendering after a short delay as backup
+      setTimeout(() => {
+        const appsGrid = document.getElementById('apps-grid');
+        if (appsGrid && appsGrid.children.length === 0) {
+          console.log('Backup render triggered');
+          initializeApps();
+        }
+      }, 500);
+      
+      // Force reset function - can be called from console: window.resetQuickApps()
+      window.resetQuickApps = function() {
+        console.log('Force resetting quick apps...');
+        localStorage.removeItem('quickApps');
+        quickApps = JSON.parse(JSON.stringify(defaultQuickApps));
+        saveQuickApps(quickApps);
+        isEditMode = false;
+        editingAppIndex = null;
+        const editBtn = document.getElementById('edit-apps');
+        if (editBtn) editBtn.textContent = 'Edit';
+        renderAppsGrid();
+        console.log('Quick apps reset complete. Apps:', quickApps.length);
+      };
+      
+      // Make sure edit mode is accessible
+      window.toggleEditMode = function() {
+        const editBtn = document.getElementById('edit-apps');
+        if (editBtn) {
+          editBtn.click();
+        }
+      };
+      
+      // Auto-reset if apps are missing (one-time check)
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          const appsGrid = document.getElementById('apps-grid');
+          if (appsGrid && appsGrid.children.length === 0) {
+            console.log('Auto-resetting apps because grid is empty');
+            window.resetQuickApps();
+          }
+        }, 1000);
+      });
+      
+      // Edit Apps Functionality - Inline on home page
+      function initEditApps() {
+        const editAppsBtn = document.getElementById('edit-apps');
+        const inlineEditForm = document.getElementById('inline-edit-form');
+        const inlineEditAppName = document.getElementById('inline-edit-app-name');
+        const inlineEditAppUrl = document.getElementById('inline-edit-app-url');
+        const inlineEditAppIcon = document.getElementById('inline-edit-app-icon');
+        const inlineSaveEditApp = document.getElementById('inline-save-edit-app');
+        const inlineCancelEditApp = document.getElementById('inline-cancel-edit-app');
+        
+        // Toggle edit mode
+        if (editAppsBtn) {
+          editAppsBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            isEditMode = !isEditMode;
+            if (isEditMode) {
+              editAppsBtn.textContent = 'Done';
+              renderAppsGrid(); // Re-render with edit buttons
+            } else {
+              editAppsBtn.textContent = 'Edit';
+              // Ensure Games app is always present
+              const hasGamesApp = quickApps.some(app => app.action === 'show-games' || app.name === 'Games');
+              if (!hasGamesApp) {
+                quickApps.push({ name: 'Games', icon: 'data:image/svg+xml,%3Csvg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M20 16C16.6863 16 14 18.6863 14 22V42C14 45.3137 16.6863 48 20 48H44C47.3137 48 50 45.3137 50 42V22C50 18.6863 47.3137 16 44 16H20Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/%3E%3Cpath d="M18 28H22V32H18V28Z" fill="white"/%3E%3Cpath d="M42 28H46V32H42V28Z" fill="white"/%3E%3Cpath d="M24 24H26V26H24V24Z" fill="white"/%3E%3Cpath d="M38 24H40V26H38V24Z" fill="white"/%3E%3Cpath d="M30 36H34V40H30V36Z" fill="white"/%3E%3Cpath d="M38 36H42V40H38V36Z" fill="white"/%3E%3Ctext x="20" y="20" font-size="8" fill="white" font-weight="bold"%3E+%3C/text%3E%3Ctext x="44" y="20" font-size="8" fill="white" font-weight="bold"%3E-%3C/text%3E%3C/svg%3E', fallback: '🎮', url: '#', action: 'show-games' });
+              }
+              saveQuickApps(quickApps);
+              renderAppsGrid(); // Re-render without edit buttons
+              if (inlineEditForm) inlineEditForm.style.display = 'none';
+              editingAppIndex = null;
+            }
+          });
+        }
+        
+        // Save edited app
+        if (inlineSaveEditApp) {
+          inlineSaveEditApp.addEventListener('click', () => {
+            if (editingAppIndex !== null && inlineEditAppName && inlineEditAppUrl && inlineEditAppIcon) {
+              const app = quickApps[editingAppIndex];
+              const isGamesApp = app.action === 'show-games' || app.name === 'Games';
+              
+              // Prevent editing Games app
+              if (isGamesApp) {
+                alert('The Games app cannot be edited.');
+                if (inlineEditForm) inlineEditForm.style.display = 'none';
+                editingAppIndex = null;
+                return;
+              }
+              
+              const name = inlineEditAppName.value.trim();
+              const url = inlineEditAppUrl.value.trim();
+              const icon = inlineEditAppIcon.value.trim();
+              
+              if (!name || !url) {
+                alert('Please enter both name and URL');
+                return;
+              }
+              
+              quickApps[editingAppIndex] = {
+                name,
+                url,
+                icon: icon || '',
+                fallback: quickApps[editingAppIndex].fallback || '🎮'
+              };
+              
+              // Ensure Games app is always present
+              const hasGamesApp = quickApps.some(a => a.action === 'show-games' || a.name === 'Games');
+              if (!hasGamesApp) {
+                quickApps.push({ name: 'Games', icon: 'data:image/svg+xml,%3Csvg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M20 16C16.6863 16 14 18.6863 14 22V42C14 45.3137 16.6863 48 20 48H44C47.3137 48 50 45.3137 50 42V22C50 18.6863 47.3137 16 44 16H20Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/%3E%3Cpath d="M18 28H22V32H18V28Z" fill="white"/%3E%3Cpath d="M42 28H46V32H42V28Z" fill="white"/%3E%3Cpath d="M24 24H26V26H24V24Z" fill="white"/%3E%3Cpath d="M38 24H40V26H38V24Z" fill="white"/%3E%3Cpath d="M30 36H34V40H30V36Z" fill="white"/%3E%3Cpath d="M38 36H42V40H38V36Z" fill="white"/%3E%3Ctext x="20" y="20" font-size="8" fill="white" font-weight="bold"%3E+%3C/text%3E%3Ctext x="44" y="20" font-size="8" fill="white" font-weight="bold"%3E-%3C/text%3E%3C/svg%3E', fallback: '🎮', url: '#', action: 'show-games' });
+              }
+              
+              saveQuickApps(quickApps);
+              renderAppsGrid();
+              if (inlineEditForm) inlineEditForm.style.display = 'none';
+              editingAppIndex = null;
+            }
+          });
+        }
+        
+        // Cancel editing
+        if (inlineCancelEditApp) {
+          inlineCancelEditApp.addEventListener('click', () => {
+            if (editingAppIndex !== null && editingAppIndex === quickApps.length - 1 && !quickApps[editingAppIndex].url) {
+              // Remove if it was a new app with no URL
+              quickApps.pop();
+              renderAppsGrid();
+            }
+            if (inlineEditForm) inlineEditForm.style.display = 'none';
+            editingAppIndex = null;
+          });
+        }
+        
+        // Auto-fetch icon when URL is entered in inline edit form
+        if (inlineEditAppUrl) {
+          inlineEditAppUrl.addEventListener('blur', async () => {
+            const url = inlineEditAppUrl.value.trim();
+            if (url && inlineEditAppIcon && !inlineEditAppIcon.value.trim()) {
+              try {
+                const faviconUrl = await fetchFavicon(url);
+                if (faviconUrl) {
+                  inlineEditAppIcon.value = faviconUrl;
+                }
+              } catch (error) {
+                console.error('Failed to fetch favicon:', error);
+              }
+            }
+          });
+        }
+        
+        // Open inline edit form
+        window.openInlineEditAppModal = function(index) {
+          const app = quickApps[index];
+          const isGamesApp = app.action === 'show-games' || app.name === 'Games';
+          
+          // Prevent editing Games app
+          if (isGamesApp) {
+            alert('The Games app cannot be edited.');
+            return;
+          }
+          
+          editingAppIndex = index;
+          if (inlineEditAppName) inlineEditAppName.value = app.name || '';
+          if (inlineEditAppUrl) inlineEditAppUrl.value = app.url || '';
+          if (inlineEditAppIcon) inlineEditAppIcon.value = app.icon || '';
+          if (inlineEditForm) {
+            inlineEditForm.style.display = 'block';
+            inlineEditForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        };
+        
+        // Function to extract domain from URL
+        function getDomainFromUrl(url) {
+          try {
+            // Add protocol if missing
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+              url = 'https://' + url;
+            }
+            const urlObj = new URL(url);
+            return urlObj.hostname.replace('www.', '');
+          } catch {
+            return url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+          }
+        }
+        
+        // Function to fetch favicon automatically
+        async function fetchFavicon(url) {
+          try {
+            const domain = getDomainFromUrl(url);
+            
+            // Try Google's favicon service first (most reliable)
+            const googleFavicon = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+            
+            // Test if the favicon loads
+            return new Promise((resolve) => {
+              const img = new Image();
+              img.onload = () => resolve(googleFavicon);
+              img.onerror = () => {
+                // Fallback to direct favicon.ico
+                try {
+                  const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`);
+                  resolve(`${urlObj.origin}/favicon.ico`);
+                } catch {
+                  resolve('');
+                }
+              };
+              img.src = googleFavicon;
+            });
+          } catch (error) {
+            console.error('Error fetching favicon:', error);
+            return '';
+          }
+        }
+        
+        // Function to extract domain from URL
+        function getDomainFromUrl(url) {
+          try {
+            // Add protocol if missing
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+              url = 'https://' + url;
+            }
+            const urlObj = new URL(url);
+            return urlObj.hostname.replace('www.', '');
+          } catch {
+            return url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+          }
+        }
+        
+        // Function to fetch favicon automatically
+        async function fetchFavicon(url) {
+          try {
+            const domain = getDomainFromUrl(url);
+            
+            // Try Google's favicon service first (most reliable)
+            const googleFavicon = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+            
+            // Test if the favicon loads
+            return new Promise((resolve) => {
+              const img = new Image();
+              img.onload = () => resolve(googleFavicon);
+              img.onerror = () => {
+                // Fallback to direct favicon.ico
+                try {
+                  const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`);
+                  resolve(`${urlObj.origin}/favicon.ico`);
+                } catch {
+                  resolve('');
+                }
+              };
+              img.src = googleFavicon;
+            });
+          } catch (error) {
+            console.error('Error fetching favicon:', error);
+            return '';
+          }
+        }
+        
+      }
+      
+      // Initialize edit apps when DOM is ready
+      function initEditAppsWrapper() {
+        // Make sure apps are loaded first
+        quickApps = loadQuickApps();
+        renderAppsGrid();
+        // Then initialize edit functionality
+        initEditApps();
+      }
+      
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initEditAppsWrapper);
+      } else {
+        setTimeout(initEditAppsWrapper, 100);
+      }
+      
+      // Browser Controls Functionality
+      const browserControlsContainer = document.getElementById('browser-controls');
+      const browserControlsHeader = document.getElementById('browser-controls-header');
+      const browserUrlBar = document.getElementById('browser-url-bar');
+      const proxyFrame = document.getElementById('proxy-frame');
+      const browserProgressBar = document.getElementById('browser-progress-bar');
+      
+      // Toggle collapse/expand on header click
+      if (browserControlsHeader) {
+        browserControlsHeader.addEventListener('click', () => {
+          browserControlsContainer.classList.toggle('collapsed');
+        });
+      }
+      
+      // Browser navigation buttons
+      const browserHome = document.getElementById('browser-home');
+      const browserBack = document.getElementById('browser-back');
+      const browserForward = document.getElementById('browser-forward');
+      const browserRefresh = document.getElementById('browser-refresh');
+      
+      if (browserHome) {
+        browserHome.addEventListener('click', () => {
+          // Close iframe and return to home
+          if (proxyFrame) {
+            proxyFrame.classList.remove("active");
+            proxyFrame.src = "";
+            document.body.classList.remove("iframe-active");
+          }
+          const mainWrapper = document.querySelector('.main-wrapper');
+          if (mainWrapper) {
+            mainWrapper.style.display = "flex";
+            mainWrapper.style.opacity = "1";
+            mainWrapper.style.transform = "translateY(0) scale(1)";
+            mainWrapper.style.pointerEvents = "auto";
+          }
+          const gamesSection = document.getElementById("games-section");
+          const quickAppsSection = document.querySelector(".quick-apps-section");
+          if (gamesSection) gamesSection.classList.remove("active");
+          if (quickAppsSection) quickAppsSection.style.display = "block";
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      }
+      
+      if (browserBack) {
+        browserBack.addEventListener('click', () => {
+          if (proxyFrame && proxyFrame.contentWindow) {
+            try {
+              proxyFrame.contentWindow.history.back();
+            } catch (e) {
+              console.log('Cannot navigate back');
+            }
+          }
+        });
+      }
+      
+      if (browserForward) {
+        browserForward.addEventListener('click', () => {
+          if (proxyFrame && proxyFrame.contentWindow) {
+            try {
+              proxyFrame.contentWindow.history.forward();
+            } catch (e) {
+              console.log('Cannot navigate forward');
+            }
+          }
+        });
+      }
+      
+      if (browserRefresh) {
+        browserRefresh.addEventListener('click', () => {
+          if (proxyFrame) {
+            proxyFrame.src = proxyFrame.src;
+          }
+        });
+      }
+      
+      // Utility buttons
+      const browserSettings = document.getElementById('browser-settings');
+      if (browserSettings) {
+        browserSettings.addEventListener('click', () => {
+          const settingsModal = document.getElementById('settings-modal');
+          if (settingsModal) {
+            settingsModal.classList.add('active');
+          }
+        });
+      }
+      
+      // Progress bar animation
+      if (proxyFrame && browserProgressBar) {
+        let progressInterval;
+        proxyFrame.addEventListener('loadstart', () => {
+          browserProgressBar.style.width = '30%';
+          let progress = 30;
+          progressInterval = setInterval(() => {
+            progress += Math.random() * 10;
+            if (progress < 90) {
+              browserProgressBar.style.width = progress + '%';
+            }
+          }, 200);
+        });
+        proxyFrame.addEventListener('load', () => {
+          if (progressInterval) clearInterval(progressInterval);
+          browserProgressBar.style.width = '100%';
+          setTimeout(() => {
+            browserProgressBar.style.width = '0%';
+          }, 300);
+        });
+      }
+      
+      // Terms and Privacy Modals - Initialize when DOM is ready
+      function initTermsAndPrivacy() {
+        const footerTerms = document.getElementById('footer-terms');
+        const footerPrivacy = document.getElementById('footer-privacy');
+        const termsModal = document.getElementById('terms-modal');
+        const privacyModal = document.getElementById('privacy-modal');
+        const closeTerms = document.getElementById('close-terms');
+        const closePrivacy = document.getElementById('close-privacy');
+        
+        if (footerTerms && termsModal) {
+          footerTerms.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Terms clicked');
+            termsModal.classList.add('active');
+          });
+        } else {
+          console.log('Terms elements not found:', { footerTerms, termsModal });
+        }
+        
+        if (footerPrivacy && privacyModal) {
+          footerPrivacy.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Privacy clicked');
+            privacyModal.classList.add('active');
+          });
+        } else {
+          console.log('Privacy elements not found:', { footerPrivacy, privacyModal });
+        }
+        
+        if (closeTerms && termsModal) {
+          closeTerms.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            termsModal.classList.remove('active');
+          });
+        }
+        
+        if (closePrivacy && privacyModal) {
+          closePrivacy.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            privacyModal.classList.remove('active');
+          });
+        }
+        
+        // Close modals on outside click
+        if (termsModal) {
+          termsModal.addEventListener('click', (e) => {
+            if (e.target === termsModal) {
+              termsModal.classList.remove('active');
+            }
+          });
+        }
+        
+        if (privacyModal) {
+          privacyModal.addEventListener('click', (e) => {
+            if (e.target === privacyModal) {
+              privacyModal.classList.remove('active');
+            }
+          });
+        }
+      }
+      
+      // Initialize when DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTermsAndPrivacy);
+      } else {
+        initTermsAndPrivacy();
+      }
+      
+      // Settings Modal Functionality
+      function initSettingsModal() {
+        const settingsModal = document.getElementById('settings-modal');
+        const settingsBackBtn = document.getElementById('settings-back-btn');
+        const footerSettings = document.getElementById('footer-settings');
+        const panicKeyBtn = document.getElementById('panic-key-btn');
+        const panicRedirectUrl = document.getElementById('panic-redirect-url');
+        const autoCloakToggle = document.getElementById('auto-cloak-toggle');
+        const antiCloseToggle = document.getElementById('anti-close-toggle');
+        const cloakBlobBtn = document.getElementById('cloak-blob-btn');
+        const cloakAboutBtn = document.getElementById('cloak-about-btn');
+        const applyCloakBtn = document.getElementById('apply-cloak-btn');
+        const settingsHistoryBtn = document.getElementById('settings-history-btn');
+        const settingsBookmarksBtn = document.getElementById('settings-bookmarks-btn');
+        
+        // Open settings modal
+        if (footerSettings) {
+          footerSettings.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (settingsModal) {
+              settingsModal.classList.add('active');
+              loadSettingsValues();
+            }
+          });
+        }
+        
+        // Close settings modal (back button)
+        if (settingsBackBtn) {
+          settingsBackBtn.addEventListener('click', () => {
+            if (settingsModal) {
+              settingsModal.classList.remove('active');
+            }
+          });
+        }
+        
+        // Close modal on outside click
+        if (settingsModal) {
+          settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) {
+              settingsModal.classList.remove('active');
+            }
+          });
+        }
+        
+        // Load settings values from localStorage
+        function loadSettingsValues() {
+          const settings = JSON.parse(localStorage.getItem('advancedSettings') || '{}');
+          
+          // Panic Button
+          if (panicKeyBtn) {
+            const panicKey = settings.panicKey || 'Escape';
+            panicKeyBtn.textContent = panicKey;
+          }
+          if (panicRedirectUrl) {
+            panicRedirectUrl.value = settings.panicRedirectUrl || 'https://classroom.google.com';
+          }
+          
+          // Auto Cloak
+          if (autoCloakToggle) {
+            autoCloakToggle.checked = settings.autoCloak || false;
+          }
+          
+          // Anti-Close
+          if (antiCloseToggle) {
+            antiCloseToggle.checked = settings.antiClose !== false; // Default true
+          }
+          
+          // URL Cloaker
+          const cloakType = settings.cloakType || 'blob';
+          if (cloakBlobBtn && cloakAboutBtn) {
+            if (cloakType === 'blob') {
+              cloakBlobBtn.classList.add('active');
+              cloakAboutBtn.classList.remove('active');
+              if (applyCloakBtn) applyCloakBtn.textContent = 'Apply Blob Cloak';
+            } else {
+              cloakAboutBtn.classList.add('active');
+              cloakBlobBtn.classList.remove('active');
+              if (applyCloakBtn) applyCloakBtn.textContent = 'Apply About Blank Cloak';
+            }
+          }
+        }
+        
+        // Save settings to localStorage
+        function saveSettings() {
+          const settings = {
+            panicKey: panicKeyBtn ? panicKeyBtn.textContent : 'Escape',
+            panicRedirectUrl: panicRedirectUrl ? panicRedirectUrl.value : 'https://classroom.google.com',
+            autoCloak: autoCloakToggle ? autoCloakToggle.checked : false,
+            antiClose: antiCloseToggle ? antiCloseToggle.checked : true,
+            cloakType: cloakBlobBtn && cloakBlobBtn.classList.contains('active') ? 'blob' : 'about'
+          };
+          localStorage.setItem('advancedSettings', JSON.stringify(settings));
+        }
+        
+        // Panic Key Button - Allow user to set custom key
+        if (panicKeyBtn) {
+          let isListening = false;
+          panicKeyBtn.addEventListener('click', () => {
+            if (isListening) return;
+            isListening = true;
+            panicKeyBtn.textContent = 'Press any key...';
+            panicKeyBtn.style.background = 'rgba(34, 211, 238, 0.3)';
+            
+            const keyListener = (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const keyName = e.key === ' ' ? 'Space' : e.key;
+              panicKeyBtn.textContent = keyName;
+              panicKeyBtn.style.background = 'rgba(34, 211, 238, 0.2)';
+              isListening = false;
+              saveSettings();
+              document.removeEventListener('keydown', keyListener);
+            };
+            
+            document.addEventListener('keydown', keyListener);
+            
+            // Cancel after 5 seconds
+            setTimeout(() => {
+              if (isListening) {
+                isListening = false;
+                panicKeyBtn.textContent = 'Escape';
+                panicKeyBtn.style.background = 'rgba(34, 211, 238, 0.2)';
+                document.removeEventListener('keydown', keyListener);
+              }
+            }, 5000);
+          });
+        }
+        
+        // Panic Redirect URL
+        if (panicRedirectUrl) {
+          panicRedirectUrl.addEventListener('change', saveSettings);
+          panicRedirectUrl.addEventListener('blur', saveSettings);
+        }
+        
+        // Auto Cloak Toggle
+        if (autoCloakToggle) {
+          autoCloakToggle.addEventListener('change', () => {
+            saveSettings();
+            if (autoCloakToggle.checked) {
+              // Enable auto cloak
+              let originalTitle = document.title;
+              let originalFavicon = document.querySelector('link[rel="icon"]')?.href || '';
+              
+              document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                  document.title = 'Google';
+                  const favicon = document.querySelector('link[rel="icon"]') || document.createElement('link');
+                  favicon.rel = 'icon';
+                  favicon.href = 'https://www.google.com/favicon.ico';
+                  if (!document.querySelector('link[rel="icon"]')) {
+                    document.head.appendChild(favicon);
+                  }
+                } else {
+                  document.title = originalTitle;
+                  if (originalFavicon) {
+                    const favicon = document.querySelector('link[rel="icon"]') || document.createElement('link');
+                    favicon.rel = 'icon';
+                    favicon.href = originalFavicon;
+                    if (!document.querySelector('link[rel="icon"]')) {
+                      document.head.appendChild(favicon);
+                    }
+                  }
+                }
+              });
+            }
+          });
+        }
+        
+        // Anti-Close Toggle
+        if (antiCloseToggle) {
+          antiCloseToggle.addEventListener('change', () => {
+            saveSettings();
+            if (antiCloseToggle.checked) {
+              window.addEventListener('beforeunload', (e) => {
+                e.preventDefault();
+                e.returnValue = '';
+                return '';
+              });
+            } else {
+              window.removeEventListener('beforeunload', () => {});
+            }
+          });
+          
+          // Initialize anti-close if enabled
+          if (antiCloseToggle.checked) {
+            window.addEventListener('beforeunload', (e) => {
+              e.preventDefault();
+              e.returnValue = '';
+              return '';
+            });
+          }
+        }
+        
+        // URL Cloaker Type Selection
+        if (cloakBlobBtn && cloakAboutBtn) {
+          cloakBlobBtn.addEventListener('click', () => {
+            cloakBlobBtn.classList.add('active');
+            cloakAboutBtn.classList.remove('active');
+            if (applyCloakBtn) applyCloakBtn.textContent = 'Apply Blob Cloak';
+            saveSettings();
+          });
+          
+          cloakAboutBtn.addEventListener('click', () => {
+            cloakAboutBtn.classList.add('active');
+            cloakBlobBtn.classList.remove('active');
+            if (applyCloakBtn) applyCloakBtn.textContent = 'Apply About Blank Cloak';
+            saveSettings();
+          });
+        }
+        
+        // Apply Cloak
+        if (applyCloakBtn) {
+          applyCloakBtn.addEventListener('click', () => {
+            const cloakType = cloakBlobBtn && cloakBlobBtn.classList.contains('active') ? 'blob' : 'about';
+            const currentUrl = window.location.href;
+            
+            if (cloakType === 'blob') {
+              // Create blob URL
+              const blob = new Blob([`<iframe src="${currentUrl}" style="width:100%;height:100%;border:none;"></iframe>`], { type: 'text/html' });
+              const blobUrl = URL.createObjectURL(blob);
+              window.location.href = blobUrl;
+            } else {
+              // About blank with iframe
+              const aboutBlank = window.open('about:blank', '_blank');
+              if (aboutBlank) {
+                aboutBlank.document.write(`<iframe src="${currentUrl}" style="width:100%;height:100%;border:none;"></iframe>`);
+              }
+            }
+            saveSettings();
+          });
+        }
+        
+        // Panic Button Global Handler
+        document.addEventListener('keydown', (e) => {
+          const settings = JSON.parse(localStorage.getItem('advancedSettings') || '{}');
+          const panicKey = settings.panicKey || 'Escape';
+          const panicUrl = settings.panicRedirectUrl || 'https://classroom.google.com';
+          
+          if (e.key === panicKey || (panicKey === 'Escape' && e.key === 'Escape')) {
+            window.location.href = panicUrl;
+          }
+        });
+        
+        // History and Bookmarks buttons (placeholder functionality)
+        if (settingsHistoryBtn) {
+          settingsHistoryBtn.addEventListener('click', () => {
+            alert('Browsing History feature coming soon!');
+          });
+        }
+        
+        if (settingsBookmarksBtn) {
+          settingsBookmarksBtn.addEventListener('click', () => {
+            alert('Bookmarks feature coming soon!');
+          });
+        }
+      }
+      
+      // Initialize settings modal
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSettingsModal);
+      } else {
+        setTimeout(initSettingsModal, 100);
+      }
+      
+      // Make browser URL bar editable and functional
+      if (browserUrlBar) {
+        // Remove readonly styling
+        browserUrlBar.removeAttribute('readonly');
+        
+        // Handle Enter key press
+        browserUrlBar.addEventListener('keydown', async (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            const input = browserUrlBar.value.trim();
+            
+            if (!input) return;
+            
+            try {
+              // Show loading
+              const loading = document.getElementById('loading');
+              if (loading) loading.classList.add('active');
+              
+              // Import getUV function from prxy.mjs
+              const { getUV } = await import('./scripts/prxy.mjs');
+              
+              // Get settings
+              const settings = JSON.parse(localStorage.getItem('proxySettings') || '{}');
+              const wispUrl = settings.wispUrl || 'wss://wisp.rhw.one/';
+              
+              // Check if it's a URL or search query
+              let urlToProxy = input;
+              try {
+                new URL(input);
+              } catch {
+                // Not a valid URL, treat as search query
+                const searchEngines = {
+                  duckduckgo: `https://html.duckduckgo.com/html?t=h_&q=${encodeURIComponent(input)}`,
+                  google: `https://www.google.com/search?q=${encodeURIComponent(input)}`,
+                  bing: `https://www.bing.com/search?q=${encodeURIComponent(input)}`,
+                  yahoo: `https://search.yahoo.com/search?p=${encodeURIComponent(input)}`
+                };
+                const searchEngine = settings.searchEngine || 'duckduckgo';
+                urlToProxy = searchEngines[searchEngine] || searchEngines.duckduckgo;
+              }
+              
+              const proxiedUrl = await getUV(urlToProxy, wispUrl);
+              
+              // Update iframe
+              if (proxyFrame) {
+                proxyFrame.src = proxiedUrl;
+                browserUrlBar.value = urlToProxy;
+              }
+              
+              if (loading) loading.classList.remove('active');
+            } catch (error) {
+              console.error('Error loading URL:', error);
+              const loading = document.getElementById('loading');
+              if (loading) loading.classList.remove('active');
+              alert('Failed to load URL. Please try again.');
+            }
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
